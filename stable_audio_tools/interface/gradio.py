@@ -939,7 +939,7 @@ def create_sampling_ui_with_filename(model_config, inpainting=False):
 
                 with gr.Row():
                     # Steps slider
-                    steps_slider = gr.Slider(minimum=1, maximum=500, step=1, value=250, label="Steps")
+                    steps_slider = gr.Slider(minimum=1, maximum=500, step=1, value=100, label="Steps")
 
                     # Preview slider
                     preview_every_slider = gr.Slider(minimum=0, maximum=100, step=1, value=0, label="Preview Every")
