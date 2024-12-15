@@ -795,7 +795,7 @@ def create_sampling_ui_with_filename(model_config, inpainting=False):
             # Buttons for Generate and Generate Forever
             generate_button = gr.Button("Generate", variant="primary", scale=1)
             generate_forever_button = gr.Button("Generate Forever", variant="secondary", scale=1)
-            stop_button = gr.Button("Stop Generation", variant="danger", scale=1)
+            stop_button = gr.Button("Cancel Forever", variant="danger", scale=1)
             
         model_conditioning_config = model_config["model"].get("conditioning", None)
 
@@ -974,8 +974,12 @@ def ensure_wav_extension(filename):
 def stop_generation(*args):
     global generate_forever_flag
     # Set the flag to False to stop the infinite generation
+    
+    if generate_forever_flag == False:
+        print("Stopping generate loop")
+
     generate_forever_flag = False
-    print("Generation process stopped.")
+    
     
 def ensure_unique_filename(output_folder, filename):
     """Ensure the filename is unique by appending a number if it already exists."""
