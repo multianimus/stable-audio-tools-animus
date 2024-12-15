@@ -525,9 +525,11 @@ def create_sampling_ui(model_config, inpainting=False):
 def create_txt2audio_ui(model_config):
     with gr.Blocks() as ui:
         with gr.Tab("Generation"):
-            create_sampling_ui(model_config) 
+            #create_sampling_ui(model_config)
+            create_sampling_ui_with_filename(model_config) 
         with gr.Tab("Inpainting"):
-            create_sampling_ui(model_config, inpainting=True)    
+            #create_sampling_ui(model_config, inpainting=True)
+            create_sampling_ui_with_filename(model_config, inpainting=True)
     return ui
 
 def create_diffusion_uncond_ui(model_config):
@@ -1168,8 +1170,7 @@ def create_ui(model_config_path=None, ckpt_path=None, pretrained_name=None, pret
     model_type = model_config["model_type"]
 
     if model_type == "diffusion_cond":
-      # ui = create_txt2audio_ui(model_config)
-        ui = create_sampling_ui_with_filename(model_config)  
+        ui = create_txt2audio_ui(model_config)
     elif model_type == "diffusion_uncond":
         ui = create_diffusion_uncond_ui(model_config)
     elif model_type == "autoencoder" or model_type == "diffusion_autoencoder":
