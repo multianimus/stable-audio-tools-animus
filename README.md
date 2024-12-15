@@ -1,5 +1,5 @@
 # stable-audio-tools
-Training and inference code for audio generation models
+Training and inference code for audio generation models with minor QOL tweaks. Generate forever, save to output folder, prompt2filename or choose a name for your audio clips.
 
 # Install
 
