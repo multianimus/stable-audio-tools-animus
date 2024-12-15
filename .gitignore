@@ -9,8 +9,11 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+.vs/
 develop-eggs/
 dist/
+models/
+stable_audio_tools/.vs/
 downloads/
 eggs/
 .eggs/
