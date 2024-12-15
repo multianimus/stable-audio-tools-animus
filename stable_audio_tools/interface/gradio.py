@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 import gc
 import os
 import ffmpeg
@@ -9,6 +10,7 @@ import torch
 import torchaudio
 import threading
 import time
+import re
 
 from aeiou.viz import audio_spectrogram_image
 from einops import rearrange
@@ -668,9 +670,11 @@ def generate_cond_with_filename(
     os.makedirs(output_folder, exist_ok=True)
 
     if not filename:
-        filename = "output.wav"  # Default filename if none provided
+        filename = ensure_unique_filename(output_folder, sanitize_filename(prompt))
+    else:
+        filename = ensure_unique_filename(output_folder, filename)
+    
     filename = ensure_wav_extension(filename)
-    filename = ensure_unique_filename(output_folder, filename)
 
     # Call the original generation function
     audio_path, spectrograms = generate_cond(
@@ -970,7 +974,27 @@ def ensure_wav_extension(filename):
     if not filename.endswith(".wav"):
         filename += ".wav"
     return filename
+
+def sanitize_filename(filename: str, replacement: str = "_") -> str:
+    """
+    Removes invalid characters from a string to make it a valid filename.
+
+    Args:
+        filename (str): The original filename.
+        replacement (str): The character to replace invalid characters with (default is "_").
+
+    Returns:
+        str: The sanitized filename.
+    """
+    # Define a regex for invalid characters (allow only alphanumeric, dash, underscore, and space)
+    invalid_characters_pattern = r'[<>:"/\\|?*\x00-\x1F]'  # Invalid on most file systems
+    sanitized = re.sub(invalid_characters_pattern, replacement, filename)
     
+    # Remove leading and trailing spaces or dots, which are also invalid for filenames
+    sanitized = sanitized.strip(" .")
+    
+    return sanitized 
+
 def stop_generation(*args):
     global generate_forever_flag
     # Set the flag to False to stop the infinite generation
