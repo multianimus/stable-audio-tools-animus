@@ -7,7 +7,7 @@ cd /d "%~dp0"
 call venv\Scripts\activate
 
 :: Run the Python script
-python run_gradio.py --ckpt-path ".\models\stable_audio\model.safetensors" --model-config ".\models\stable_audio\model_config.json"
+python run_gradio.py
 
 :: Pause to see the output
 pause
