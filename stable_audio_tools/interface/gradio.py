@@ -1,8 +1,6 @@
 from asyncio.windows_events import NULL
 import gc
 import os
-
-import ffmpeg
 import threading
 import numpy as np
 import gradio as gr
@@ -12,15 +10,14 @@ import torchaudio
 import threading
 import time
 import re
-
 import hffs
+import ffmpeg
 
 from aeiou.viz import audio_spectrogram_image
 from einops import rearrange
 from safetensors.torch import load_file
 from torch.nn import functional as F
 from torchaudio import transforms as T
-from pydub import AudioSegment
 
 from ..inference.generation import generate_diffusion_cond, generate_diffusion_uncond
 from ..models.factory import create_model_from_config
@@ -28,9 +25,6 @@ from ..models.pretrained import get_pretrained_model
 from ..models.utils import load_ckpt_state_dict
 from ..inference.utils import prepare_audio
 from ..training.utils import copy_state_dict
-
-import matplotlib.pyplot as plt
-import librosa.display
 
 # Load config file
 with open("config.json") as config_file:
@@ -41,14 +35,10 @@ sample_rate = 32000
 sample_size = 1920000
 DEVICE = None
 global_model_half = False
-
+generate_forever_flag = False
 output_directory = config['generations_directory']
 
-# Ensure the output directory exists
 os.makedirs(output_directory, exist_ok=True)
-
-generate_forever_flag = False
-
 
 def load_model(model_config=None, model_ckpt_path=None, pretrained_name=None, pretransform_ckpt_path=None, device=None):
     global model, sample_rate, sample_size, global_model_half
@@ -391,7 +381,6 @@ def generate_lm(
 
     return ("output.wav", [audio_spectrogram])
 
-
 def create_uncond_sampling_ui(model_config):   
     generate_button = gr.Button("Generate", variant='primary', scale=1)
     
@@ -570,8 +559,7 @@ def diffusion_prior_process(audio, steps, sampler_type, sigma_min, sigma_max):
 
     return "output.wav"
 
-# Updated generate_cond_with_filename to ensure it uses the filename properly
-def generate_cond_with_filename(
+def generate_cond(
         filename,
         prompt,
         negative_prompt=None,
@@ -674,8 +662,8 @@ def generate_forever(
         # Start infinite loop if the flag is True
         while generate_forever_flag:
             print("Generating...")  # You can replace this with actual generation logic
-            # Call the generate_cond_with_filename function with the provided parameters
-            generate_cond_with_filename(
+            # Call the generate_cond function with the provided parameters
+            generate_cond(
                 filename,
                 prompt,
                 negative_prompt,
@@ -715,7 +703,6 @@ def stop_generation():
     generate_forever_flag = False
     print("Generation process stopped.")
 
-# Updated UI Function
 def create_sampling_ui(model_config, initial_ckpt, inpainting=False):
     ckpt_files = get_models_and_configs(config['models_directory'])
     
@@ -907,7 +894,7 @@ def create_sampling_ui(model_config, initial_ckpt, inpainting=False):
 
     # Generate button click
     generate_button.click(
-        fn=generate_cond_with_filename,
+        fn=generate_cond,
         inputs=[filename_textbox, *inputs],
         outputs=[audio_output, spectrogram_output],
     )
@@ -944,16 +931,7 @@ def ensure_wav_extension(filename):
     return filename
 
 def sanitize_filename(filename: str, replacement: str = "_") -> str:
-    """
-    Removes invalid characters from a string to make it a valid filename.
 
-    Args:
-        filename (str): The original filename.
-        replacement (str): The character to replace invalid characters with (default is "_").
-
-    Returns:
-        str: The sanitized filename.
-    """
     # Define a regex for invalid characters (allow only alphanumeric, dash, underscore, and space)
     invalid_characters_pattern = r'[<>:"/\\|?*\x00-\x1F]'  # Invalid on most file systems
     sanitized = re.sub(invalid_characters_pattern, replacement, filename)
@@ -965,16 +943,13 @@ def sanitize_filename(filename: str, replacement: str = "_") -> str:
 
 def stop_generation(*args):
     global generate_forever_flag
-    # Set the flag to False to stop the infinite generation
     
     if generate_forever_flag == False:
         print("Stopping generate loop")
 
     generate_forever_flag = False
     
-    
 def ensure_unique_filename(output_folder, filename):
-    """Ensure the filename is unique by appending a number if it already exists."""
     base, ext = os.path.splitext(filename)
     counter = 1
     unique_filename = filename
@@ -982,7 +957,6 @@ def ensure_unique_filename(output_folder, filename):
         unique_filename = f"{base}_{counter}{ext}"
         counter += 1
     return unique_filename
-
 
 def create_diffusion_prior_ui(model_config):
     with gr.Blocks() as ui:
@@ -1016,7 +990,6 @@ def create_diffusion_prior_ui(model_config):
         )
 
     return ui
-
 
 def create_lm_ui(model_config):
     with gr.Blocks() as ui:
