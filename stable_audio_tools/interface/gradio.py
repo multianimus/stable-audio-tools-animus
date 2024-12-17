@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 import gc
 import os
 import threading
@@ -8,10 +7,10 @@ import json
 import torch
 import torchaudio
 import threading
+import ffmpeg
 import time
 import re
 import hffs
-import ffmpeg
 
 from aeiou.viz import audio_spectrogram_image
 from einops import rearrange
@@ -26,7 +25,6 @@ from ..models.utils import load_ckpt_state_dict
 from ..inference.utils import prepare_audio
 from ..training.utils import copy_state_dict
 
-# Load config file
 with open("config.json") as config_file:
     config = json.load(config_file)
 
@@ -36,8 +34,8 @@ sample_size = 1920000
 DEVICE = None
 global_model_half = False
 generate_forever_flag = False
-output_directory = config['generations_directory']
 
+output_directory = config['generations_directory']
 os.makedirs(output_directory, exist_ok=True)
 
 def load_model(model_config=None, model_ckpt_path=None, pretrained_name=None, pretransform_ckpt_path=None, device=None):
@@ -559,7 +557,7 @@ def diffusion_prior_process(audio, steps, sampler_type, sigma_min, sigma_max):
 
     return "output.wav"
 
-def generate_cond(
+def generate_cond_with_filename(
         filename,
         prompt,
         negative_prompt=None,
@@ -662,8 +660,8 @@ def generate_forever(
         # Start infinite loop if the flag is True
         while generate_forever_flag:
             print("Generating...")  # You can replace this with actual generation logic
-            # Call the generate_cond function with the provided parameters
-            generate_cond(
+            # Call the generate_cond_with_filename function with the provided parameters
+            generate_cond_with_filename(
                 filename,
                 prompt,
                 negative_prompt,
@@ -894,7 +892,7 @@ def create_sampling_ui(model_config, initial_ckpt, inpainting=False):
 
     # Generate button click
     generate_button.click(
-        fn=generate_cond,
+        fn=generate_cond_with_filename,
         inputs=[filename_textbox, *inputs],
         outputs=[audio_output, spectrogram_output],
     )
@@ -925,18 +923,16 @@ def update_config_dropdown(selected_ckpt, ckpt_files):
         return gr.update(choices=["Error finding configs"], value="Error finding configs")
     
 def ensure_wav_extension(filename):
-    """Ensure the filename ends with .wav."""
+   
     if not filename.endswith(".wav"):
         filename += ".wav"
     return filename
 
 def sanitize_filename(filename: str, replacement: str = "_") -> str:
-
-    # Define a regex for invalid characters (allow only alphanumeric, dash, underscore, and space)
+  
     invalid_characters_pattern = r'[<>:"/\\|?*\x00-\x1F]'  # Invalid on most file systems
     sanitized = re.sub(invalid_characters_pattern, replacement, filename)
     
-    # Remove leading and trailing spaces or dots, which are also invalid for filenames
     sanitized = sanitized.strip(" .")
     
     return sanitized 
