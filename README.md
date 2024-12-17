@@ -1,3 +1,3 @@
 # stable-audio-tools
 
-Minor QOL tweaks. Model loading, lowvram start bat file, generate forever, save to output folder, automatically trim audio, prompt2filename or choose a name for your audio clips
+Minor QOL tweaks. Model loading, generate forever, save to output folder, lowvram bat file, automatically trim audio, prompt2filename or choose a name for your audio clips
